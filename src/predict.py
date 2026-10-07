@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+import csv
 from pathlib import Path
 
 import joblib
@@ -8,22 +9,28 @@ import joblib
 
 ROOT_DIR = Path(__file__).resolve().parents[1]
 MODEL_PATH = ROOT_DIR / "models" / "inquiry_classifier.joblib"
+LABEL_PATH = ROOT_DIR / "data" / "category_labels.csv"
 
-CATEGORY_LABELS = {
-    "account": "アカウント",
-    "billing": "請求・支払い",
-    "bug": "不具合",
-    "cancel": "解約・退会",
-    "feature": "機能要望",
-    "sales": "導入相談",
-    "usage": "使い方",
-}
+
+def load_category_labels(path: Path) -> dict[str, str]:
+    with path.open("r", encoding="utf-8", newline="") as file:
+        reader = csv.DictReader(file)
+        required_columns = {"category", "label"}
+        missing = required_columns - set(reader.fieldnames or [])
+        if missing:
+            raise ValueError(f"Missing label columns: {', '.join(sorted(missing))}")
+        return {
+            row["category"].strip(): row["label"].strip()
+            for row in reader
+            if row["category"].strip() and row["label"].strip()
+        }
 
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Predict inquiry category.")
     parser.add_argument("text", help="問い合わせ文")
     parser.add_argument("--model", type=Path, default=MODEL_PATH)
+    parser.add_argument("--labels", type=Path, default=LABEL_PATH)
     args = parser.parse_args()
 
     if not args.model.exists():
@@ -32,10 +39,11 @@ def main() -> None:
         )
 
     model = joblib.load(args.model)
+    category_labels = load_category_labels(args.labels)
     predicted = model.predict([args.text])[0]
 
     print(f"入力: {args.text}")
-    print(f"予測カテゴリ: {CATEGORY_LABELS.get(predicted, predicted)} ({predicted})")
+    print(f"予測カテゴリ: {category_labels.get(predicted, predicted)} ({predicted})")
 
     if hasattr(model.named_steps["classifier"], "predict_proba"):
         probabilities = model.predict_proba([args.text])[0]
@@ -43,7 +51,7 @@ def main() -> None:
         ranked = sorted(zip(classes, probabilities), key=lambda item: item[1], reverse=True)
         print("確信度:")
         for category, score in ranked[:3]:
-            label = CATEGORY_LABELS.get(category, category)
+            label = category_labels.get(category, category)
             print(f"- {label}: {score:.3f}")
 
 

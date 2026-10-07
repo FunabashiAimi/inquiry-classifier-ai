@@ -1,217 +1,60 @@
 from __future__ import annotations
 
+import csv
+from pathlib import Path
 from typing import Iterable
 
 from scipy import sparse
 from sklearn.base import BaseEstimator, TransformerMixin
 
 
-CATEGORY_KEYWORDS = {
-    "account": [
-        "ログイン",
-        "パスワード",
-        "認証",
-        "アカウント",
-        "メールアドレス",
-        "招待",
-        "ユーザー",
-        "二段階",
-        "login",
-        "password",
-        "authentication",
-        "account",
-        "email",
-        "invite",
-        "user",
-        "two-factor",
-        "登录",
-        "密码",
-        "认证",
-        "账户",
-        "邮箱",
-        "邀请",
-        "用户",
-        "双重验证",
-    ],
-    "billing": [
-        "請求",
-        "料金",
-        "支払い",
-        "決済",
-        "領収書",
-        "カード",
-        "振込",
-        "契約",
-        "金額",
-        "invoice",
-        "billing",
-        "payment",
-        "credit card",
-        "receipt",
-        "price",
-        "plan",
-        "charge",
-        "发票",
-        "账单",
-        "付款",
-        "信用卡",
-        "收据",
-        "费用",
-        "套餐",
-        "扣款",
-    ],
-    "bug": [
-        "エラー",
-        "不具合",
-        "表示されません",
-        "保存されません",
-        "落ちます",
-        "止まります",
-        "真っ白",
-        "タイムアウト",
-        "error",
-        "bug",
-        "crash",
-        "failed",
-        "not working",
-        "blank",
-        "timeout",
-        "cannot",
-        "错误",
-        "故障",
-        "崩溃",
-        "失败",
-        "无法",
-        "空白",
-        "超时",
-        "不能",
-    ],
-    "cancel": [
-        "解約",
-        "退会",
-        "キャンセル",
-        "停止",
-        "削除",
-        "終了",
-        "無料プラン",
-        "更新前",
-        "cancel",
-        "cancellation",
-        "unsubscribe",
-        "delete account",
-        "terminate",
-        "stop service",
-        "downgrade",
-        "renewal",
-        "取消",
-        "退订",
-        "注销",
-        "删除账户",
-        "终止",
-        "停止服务",
-        "降级",
-        "续费",
-    ],
-    "feature": [
-        "追加",
-        "機能",
-        "要望",
-        "できるように",
-        "連携",
-        "一括",
-        "並べ替え",
-        "下書き",
-        "feature",
-        "request",
-        "add",
-        "integration",
-        "bulk",
-        "customize",
-        "export",
-        "automation",
-        "功能",
-        "需求",
-        "添加",
-        "集成",
-        "批量",
-        "自定义",
-        "导出",
-        "自动化",
-    ],
-    "sales": [
-        "導入",
-        "見積",
-        "資料",
-        "デモ",
-        "トライアル",
-        "法人",
-        "相談",
-        "契約前",
-        "他社",
-        "demo",
-        "trial",
-        "quote",
-        "sales",
-        "enterprise",
-        "consult",
-        "before purchase",
-        "case study",
-        "演示",
-        "试用",
-        "报价",
-        "销售",
-        "企业",
-        "咨询",
-        "购买前",
-        "案例",
-    ],
-    "usage": [
-        "方法",
-        "手順",
-        "使い方",
-        "設定",
-        "どこ",
-        "教えて",
-        "確認したい",
-        "操作",
-        "インポート",
-        "how to",
-        "procedure",
-        "setting",
-        "where",
-        "guide",
-        "use",
-        "import",
-        "permission",
-        "如何",
-        "步骤",
-        "设置",
-        "在哪里",
-        "指南",
-        "使用",
-        "导入",
-        "权限",
-    ],
-}
+def load_keyword_map(path: Path) -> dict[str, list[str]]:
+    keyword_map: dict[str, list[str]] = {}
+    with path.open("r", encoding="utf-8", newline="") as file:
+        reader = csv.DictReader(file)
+        required_columns = {"category", "keyword"}
+        missing = required_columns - set(reader.fieldnames or [])
+        if missing:
+            raise ValueError(f"Missing keyword columns: {', '.join(sorted(missing))}")
+
+        for row in reader:
+            category = row["category"].strip()
+            keyword = row["keyword"].strip()
+            if not category or not keyword:
+                continue
+            keyword_map.setdefault(category, []).append(keyword)
+
+    if not keyword_map:
+        raise ValueError(f"No keywords loaded from {path}")
+    return keyword_map
 
 
 class KeywordFeatureExtractor(BaseEstimator, TransformerMixin):
-    """Create simple domain keyword count features for inquiry categories."""
+    """Create keyword count features from an externally supplied keyword map."""
 
-    def __init__(self, keyword_map: dict[str, list[str]] | None = None) -> None:
-        self.keyword_map = keyword_map or CATEGORY_KEYWORDS
-        self.categories_ = list(self.keyword_map.keys())
+    def __init__(self, keyword_map: dict[str, list[str]]) -> None:
+        self.keyword_map = keyword_map
 
     def fit(self, X: Iterable[str], y: Iterable[str] | None = None) -> "KeywordFeatureExtractor":
+        self.categories_ = sorted(self.keyword_map.keys())
+        self.normalized_keyword_map_ = {
+            category: [keyword.lower() for keyword in self.keyword_map[category]]
+            for category in self.categories_
+        }
         return self
 
     def transform(self, X: Iterable[str]) -> sparse.csr_matrix:
         rows: list[list[float]] = []
         for text in X:
             text_value = str(text).lower()
-            features = []
-            for category in self.categories_:
-                keywords = self.keyword_map[category]
-                features.append(sum(1 for keyword in keywords if keyword.lower() in text_value))
-            rows.append(features)
+            rows.append(
+                [
+                    sum(
+                        1
+                        for keyword in self.normalized_keyword_map_[category]
+                        if keyword in text_value
+                    )
+                    for category in self.categories_
+                ]
+            )
         return sparse.csr_matrix(rows, dtype=float)

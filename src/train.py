@@ -19,11 +19,12 @@ from sklearn.metrics import (
 from sklearn.model_selection import train_test_split
 from sklearn.pipeline import Pipeline
 
-from model_features import KeywordFeatureExtractor
+from model_features import KeywordFeatureExtractor, load_keyword_map
 
 
 ROOT_DIR = Path(__file__).resolve().parents[1]
 DATA_PATH = ROOT_DIR / "data" / "inquiries.csv"
+KEYWORD_PATH = ROOT_DIR / "data" / "category_keywords.csv"
 MODEL_PATH = ROOT_DIR / "models" / "inquiry_classifier.joblib"
 REPORT_DIR = ROOT_DIR / "reports"
 
@@ -42,7 +43,8 @@ def load_dataset(path: Path) -> pd.DataFrame:
     return df
 
 
-def build_pipeline() -> Pipeline:
+def build_pipeline(keyword_path: Path = KEYWORD_PATH) -> Pipeline:
+    keyword_map = load_keyword_map(keyword_path)
     return Pipeline(
         steps=[
             (
@@ -58,7 +60,7 @@ def build_pipeline() -> Pipeline:
                                 sublinear_tf=True,
                             ),
                         ),
-                        ("keywords", KeywordFeatureExtractor()),
+                        ("keywords", KeywordFeatureExtractor(keyword_map=keyword_map)),
                     ]
                 ),
             ),
@@ -97,6 +99,7 @@ def save_confusion_matrix(y_true: pd.Series, y_pred: list[str], labels: list[str
 def main() -> None:
     parser = argparse.ArgumentParser(description="Train inquiry category classifier.")
     parser.add_argument("--data", type=Path, default=DATA_PATH)
+    parser.add_argument("--keywords", type=Path, default=KEYWORD_PATH)
     parser.add_argument("--model", type=Path, default=MODEL_PATH)
     args = parser.parse_args()
 
@@ -112,7 +115,7 @@ def main() -> None:
         stratify=df["category"],
     )
 
-    model = build_pipeline()
+    model = build_pipeline(args.keywords)
     model.fit(X_train, y_train)
     y_pred = model.predict(X_test)
 
