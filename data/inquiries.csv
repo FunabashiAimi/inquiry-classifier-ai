@@ -83,3 +83,73 @@ CSV出力したファイルの文字化けを直す方法を知りたいです,u
 管理者権限を付与する方法を教えてください,usage
 Webhookで外部サービスへ通知できるようにしたいです,feature
 契約前に技術的な質問を相談できる担当者はいますか,sales
+I cannot log in to my account after resetting my password,account
+The verification email for my new account has not arrived,account
+How can I change the email address registered to my account,account
+The two-factor authentication code is being sent to my old phone,account
+My invitation link expired and I cannot join the workspace,account
+I want to update the billing name on my invoice,billing
+My credit card payment failed and I need to know why,billing
+Please resend the receipt for this month by email,billing
+I would like to change my payment method to bank transfer,billing
+Can you explain the pricing if we switch to an annual plan,billing
+I want to cancel my paid subscription next month,cancel
+If I delete my account will all saved data be removed,cancel
+Please tell me how to unsubscribe from the service,cancel
+Can I downgrade from the paid plan to the free plan,cancel
+I need to stop the service before the next renewal date,cancel
+The screen goes blank when I open the dashboard,bug
+An error code 500 appears when I click the save button,bug
+The app crashes whenever I upload a file,bug
+Search results are duplicated and not displayed correctly,bug
+The page keeps loading until it times out,bug
+How do I import a CSV file into the system,usage
+Where can I find the notification settings,usage
+Please tell me the steps to add a team member,usage
+How can I export all project data,usage
+I need a guide for issuing an API key,usage
+Please add a bulk edit feature for administrators,feature
+I want Slack integration for notifications,feature
+Can you add PDF export for reports,feature
+We need a feature to save search conditions,feature
+Please make dashboard widgets customizable,feature
+Please send me product materials for review,sales
+I would like to request a demo before purchasing,sales
+Can you provide a quote for ten users,sales
+I want to discuss an enterprise contract with sales,sales
+Do you have case studies for companies in our industry,sales
+重置密码后我无法登录账户,account
+新账户的验证邮件一直没有收到,account
+如何更改账户绑定的邮箱地址,account
+双重验证验证码发送到了旧手机,account
+邀请链接已过期所以无法加入工作区,account
+我想修改发票上的公司名称,billing
+信用卡付款失败请帮我确认原因,billing
+请重新发送本月的收据到邮箱,billing
+我想把付款方式改成银行转账,billing
+年度套餐的费用是多少,billing
+我想下个月取消付费订阅,cancel
+注销账户后保存的数据会被删除吗,cancel
+请告诉我退订服务的步骤,cancel
+可以从付费套餐降级到免费套餐吗,cancel
+我想在下次续费前停止服务,cancel
+打开仪表盘时屏幕变成空白,bug
+点击保存按钮后出现500错误,bug
+上传文件时应用会崩溃,bug
+搜索结果重复显示不正确,bug
+页面一直加载直到超时,bug
+如何导入CSV文件,usage
+通知设置在哪里,usage
+请告诉我添加团队成员的步骤,usage
+如何导出所有项目数据,usage
+API密钥在哪里生成,usage
+请添加管理员批量编辑功能,feature
+希望通知可以集成到Slack,feature
+可以添加报表PDF导出功能吗,feature
+希望能够保存搜索条件,feature
+请让仪表盘组件可以自定义,feature
+请发送产品资料给我参考,sales
+购买前我想申请演示,sales
+请提供10个用户的报价,sales
+我想咨询企业合同,sales
+有没有同行业公司的案例,sales
